@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 import csv
 import os
 
@@ -45,18 +46,20 @@ class Projectile():
     return self.time_of_flight
 
   def store_values(self) -> None:
-    file_path = "log.csv"
-    writer = csv.writer(file)
+    file_path = Path(__file__).parent/"log.csv"
 
     header = ["Launch Speed", "Launch Angle", "Gravity", "Flight Time", "Max Height", "Max Range"]
     log = [self.launch_speed, self.launch_angle, self.earth_gravity, self.time_of_flight, self.maximum_height, self.horizontal_reach]
 
     if os.path.exists(file_path):
       with open (file_path, "a") as file:
+        writer = csv.writer(file)
         writer.writerow(log)
     else:
       with open(file_path, "w") as file:
+        writer = csv.writer(file)
         writer.writerow(header)
+        writer.writerow(log)
 
     
 
