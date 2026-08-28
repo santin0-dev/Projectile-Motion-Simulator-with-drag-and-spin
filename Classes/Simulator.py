@@ -58,16 +58,36 @@ class Simulate():
     net_fx = gravity_fx + drag_fx
     net_fy = gravity_fy + drag_fy
 
+    # net force measured in Newtons
     return (net_fx, net_fy)
 
+  def calculate_acceleration(self, net_force: Vector2) -> Vector2:
+    """
+    Net force
+    ↓
+    divide by projectile mass
+    ↓
+    acceleration vector
+    """
 
-    
+    #===== VALIDATING MASS =====
+    if self.proj.mass <= 0:
+        raise ValueError("Projectile mass must be greater than zero.")
+
+    #===== DECOMPOSING NET FORCE VECTOR =====
+    net_fx = net_force[0]
+    net_fy = net_force[1]
+
+    #===== CALCULATING ACCELERATION =====
+    acceleration_x = net_fx / self.proj.mass
+    acceleration_y = net_fy / self.proj.mass
+
+    # Acceleration vector measured in m/s²
+    return (acceleration_x, acceleration_y)
 
 
 
-  def calculate_acceleration():
-
-  def advance_epoch():
+  def advance_epoch(self, acceleration: Vector2):
 
   def run():
 

@@ -3,9 +3,7 @@ Version 2:
 
 
 
-# switch from speed to vector
 
-# software knows when to use radians and just degrees
 
 # input
   better input gathering
@@ -14,6 +12,10 @@ Version 2:
   choosing what values to solve for
 
 # ideas
+  switch from speed to vector
+
+  software knows when to use radians and just degrees
+
   add standard and local variations of gravity
 
   Standard value: 9.80665 (alredy defined)
@@ -25,13 +27,10 @@ Version 2:
 
   new values:
   - [initial height] 
-  - [at specific time]
+  - [values at a specific time]
   - [spin rate]
   - [angle of attack] 
-  - [kinetic energy]
-  - [barrier clearance]
-  - [impact angle]
-  - [peak coordinate time]
+
 
 
 
@@ -43,7 +42,10 @@ complex calculations with additional variables such as:
 - air resistance
 - aerodynamic lift
 - magnus effect
-
+- [kinetic energy]
+- [barrier clearance]
+- [impact angle]
+- [peak coordinate time]
 
 Version 4:
 
