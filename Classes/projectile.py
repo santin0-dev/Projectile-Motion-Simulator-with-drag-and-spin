@@ -1,24 +1,14 @@
-import math
-
-class Projectile():
-  def __init__(self, 
-               mass: float, 
-               area: float, 
-               drag_coef: float, 
-               radius: float, 
-               spin: float
-      ):
+class Projectile:
+    def __init__(
+        self,
+        mass: float,
+        area: float,
+        drag_coefficient: float,
+        radius: float,
+        spin_rad_s: float = 0.0
+    ):
         self.mass = mass
         self.area = area
-        self.drag_coef = drag_coef
+        self.drag_coefficient = drag_coefficient
         self.radius = radius
-        self.spin = spin
-
-
-    
-
-  
-
-
-    
-
+        self.spin_rad_s = spin_rad_s

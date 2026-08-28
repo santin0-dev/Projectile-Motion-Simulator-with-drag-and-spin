@@ -13,3 +13,15 @@
   #       writer = csv.writer(file)
   #       writer.writerow(header)
   #       writer.writerow(log)
+
+
+Vector2 = tuple[float, float]
+
+def calculate_forces(mass, gravity) -> Vector2:
+    gravity_fx = 0.0
+    gravity_fy = -(mass * gravity)
+
+    return [gravity_fx, gravity_fy]
+
+
+print(f"gravitational force: {calculate_forces(2, 9.80665)}")
