@@ -87,7 +87,51 @@ class Simulate():
 
 
 
-  def advance_epoch(self, acceleration: Vector2):
+  def advance_epoch(self, current_state: State, acceleration: Vector2) -> State:
+    """
+    Current state + acceleration
+    ↓
+    update velocity
+    ↓
+    update position
+    ↓
+    return next state
+    """
+    # Position
+    current_x = current_state.position[0]
+    current_y = current_state.position[1]
+
+    # Velocity
+    current_vx = current_state.velocity[0]
+    current_vy = current_state.velocity[1]
+
+    # Acceleration
+    accel_x = acceleration[0]
+    accel_y = acceleration[1]
+    
+
+    
+     #===== NEW VELOCITY =====
+    new_vx = current_vx + accel_x * self.dt
+    new_vy = current_vy + accel_y * self.dt
+
+    #===== NEW POSITION =====
+    new_x = current_x + new_vx * self.dt
+    new_y = current_y + new_vy * self.dt
+
+    #===== NEW TIME =====
+    new_time = current_state.time + self.dt
+
+    #===== NEW STATE =====
+    new_state = State(
+        time=new_time,
+        position=(new_x, new_y),
+        velocity=(new_vx, new_vy),
+        acceleration=(accel_x, accel_y)
+    )
+
+    return new_state
+
 
   def run():
 
