@@ -1,0 +1,50 @@
+Version 2:
+
+
+
+
+# switch from speed to vector
+
+# software knows when to use radians and just degrees
+
+# input
+  better input gathering
+
+# menu
+  choosing what values to solve for
+
+# ideas
+  add standard and local variations of gravity
+
+  Standard value: 9.80665 (alredy defined)
+  At the equator: ~9.7803
+  at the poles: ~9.8322
+
+  dynamic parameter function that knows what to calculate based on given values (assuming gravity is x and such)
+  dynamic parameter constructor 
+
+  new values:
+  - [initial height] 
+  - [at specific time]
+  - [spin rate]
+  - [angle of attack] 
+  - [kinetic energy]
+  - [barrier clearance]
+  - [impact angle]
+  - [peak coordinate time]
+
+
+
+Version 3:
+
+graph visualization
+
+complex calculations with additional variables such as:
+- air resistance
+- aerodynamic lift
+- magnus effect
+
+
+Version 4:
+
+re-designing of code for 3d
