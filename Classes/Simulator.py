@@ -3,6 +3,9 @@ from .Environment import Environment
 from .State import State
 import math
 
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
 from pathlib import Path
 import os
 import csv
@@ -175,6 +178,26 @@ class Simulator():
             acceleration
         )
 
+        # ===== PRINT CURRENT EPOCH =====
+        # epoch = len(history)
+
+        # speed = math.hypot(
+        #     new_state.velocity[0],
+        #     new_state.velocity[1]
+        # )
+
+        # print(
+        #     f"Epoch {epoch:05d} | "
+        #     f"Time: {new_state.time:7.3f} s | "
+        #     f"Position: ({new_state.position[0]:8.3f}, "
+        #     f"{new_state.position[1]:8.3f}) m | "
+        #     f"Velocity: ({new_state.velocity[0]:8.3f}, "
+        #     f"{new_state.velocity[1]:8.3f}) m/s | "
+        #     f"Speed: {speed:7.3f} m/s | "
+        #     f"Acceleration: ({new_state.acceleration[0]:7.3f}, "
+        #     f"{new_state.acceleration[1]:7.3f}) m/s²"
+        # )
+
         # Store this epoch
         history.append(new_state)
 
@@ -189,6 +212,8 @@ class Simulator():
 
         if has_reached_ground:
             break
+
+   
 
     return history
 
@@ -254,7 +279,7 @@ class Simulator():
 
 
   def store_summary(self, history_log: dict) -> None:
-    file_path = Path(__file__).parent/"log.csv"
+    file_path = Path(__file__).parent.parent/ "Data" / "log.csv"
 
     header = ["flight_time_s",
         "maximum_height_m",
@@ -290,6 +315,12 @@ class Simulator():
         writer.writerow(header)
         writer.writerow(log)
 
+
+
+
+
+
+
   def store_epoch_history(self, history: list[State]) -> None:
     """
     Complete state history
@@ -299,7 +330,7 @@ class Simulator():
     store every simulation epoch
     """
 
-    file_path = Path(__file__).parent / "epoch_log.csv"
+    file_path = Path(__file__).parent.parent / "Data" / "epoch_log.csv"
 
     header = [
         "epoch",
@@ -345,4 +376,205 @@ class Simulator():
 
             writer.writerow(row)
 
-  
+
+  def animate_trajectory(
+        history: list[State],
+        interval_ms: float = 10
+    ) -> None:
+        """
+        Epoch history
+        ↓
+        display one State per frame
+        ↓
+        move projectile point
+        ↓
+        draw trajectory behind it
+        ↓
+        display epoch values
+        """
+
+        #===== VALIDATING HISTORY =====
+        if not history:
+            raise ValueError("Cannot animate an empty history.")
+
+        #===== EXTRACTING POSITIONS =====
+        x_positions = [
+            state.position[0]
+            for state in history
+        ]
+
+        y_positions = [
+            state.position[1]
+            for state in history
+        ]
+
+        #===== CREATING GRAPH =====
+        fig, (ax, info_ax) = plt.subplots(
+            1,
+            2,
+            figsize=(12, 6),
+            gridspec_kw={
+                "width_ratios": [3, 1]
+            }
+        )
+
+        #===== INFORMATION PANEL =====
+        info_ax.axis("off")
+        info_ax.set_title("Epoch Values")
+
+        #===== GRAPH BOUNDARIES =====
+        x_margin = max(
+            (max(x_positions) - min(x_positions)) * 0.05,
+            1.0
+        )
+
+        y_margin = max(
+            (max(y_positions) - min(y_positions)) * 0.10,
+            1.0
+        )
+
+        ax.set_xlim(
+            min(x_positions) - x_margin,
+            max(x_positions) + x_margin
+        )
+
+        ax.set_ylim(
+            min(0.0, min(y_positions)) - y_margin,
+            max(y_positions) + y_margin
+        )
+
+        #===== GRAPH LABELS =====
+        ax.set_title("Projectile Motion Simulation")
+        ax.set_xlabel("Horizontal Distance (m)")
+        ax.set_ylabel("Height (m)")
+        ax.axhline(
+            y=0,
+            color="black",
+            linewidth=1
+        )
+        ax.grid(True)
+        ax.set_aspect(
+            "equal",
+            adjustable="box"
+        )
+
+        #===== TRAJECTORY LINE =====
+        trajectory_line, = ax.plot(
+            [],
+            [],
+            color="blue",
+            linewidth=2,
+            label="Trajectory"
+        )
+
+        #===== PROJECTILE POINT =====
+        projectile_point, = ax.plot(
+            [],
+            [],
+            marker="o",
+            color="red",
+            markersize=8,
+            linestyle="None",
+            label="Projectile"
+        )
+
+        #===== EPOCH INFORMATION TEXT =====
+        epoch_text = info_ax.text(
+            0.05,
+            0.95,
+            "",
+            transform=info_ax.transAxes,
+            verticalalignment="top",
+            family="monospace",
+            fontsize=10
+        )
+
+        ax.legend()
+
+        #===== INITIAL FRAME =====
+        def initialize():
+            trajectory_line.set_data([], [])
+            projectile_point.set_data([], [])
+            epoch_text.set_text("")
+
+            return (
+                trajectory_line,
+                projectile_point,
+                epoch_text
+            )
+
+        #===== UPDATING EACH FRAME =====
+        def update(frame_index: int):
+            current_state = history[frame_index]
+
+            # Current position
+            position_x = current_state.position[0]
+            position_y = current_state.position[1]
+
+            # Current velocity
+            velocity_x = current_state.velocity[0]
+            velocity_y = current_state.velocity[1]
+
+            # Current acceleration
+            acceleration_x = current_state.acceleration[0]
+            acceleration_y = current_state.acceleration[1]
+
+            # Current speed
+            speed = math.hypot(
+                velocity_x,
+                velocity_y
+            )
+
+            #===== UPDATE TRAJECTORY =====
+            trajectory_line.set_data(
+                x_positions[:frame_index + 1],
+                y_positions[:frame_index + 1]
+            )
+
+            #===== UPDATE PROJECTILE =====
+            projectile_point.set_data(
+                [position_x],
+                [position_y]
+            )
+
+            #===== UPDATE EPOCH VALUES =====
+            epoch_text.set_text(
+                f"Epoch: {frame_index}\n"
+                f"Time:  {current_state.time:8.3f} s\n\n"
+
+                f"Position\n"
+                f"  x: {position_x:8.3f} m\n"
+                f"  y: {position_y:8.3f} m\n\n"
+
+                f"Velocity\n"
+                f"  vx:    {velocity_x:8.3f} m/s\n"
+                f"  vy:    {velocity_y:8.3f} m/s\n"
+                f"  speed: {speed:8.3f} m/s\n\n"
+
+                f"Acceleration\n"
+                f"  ax: {acceleration_x:8.3f} m/s²\n"
+                f"  ay: {acceleration_y:8.3f} m/s²"
+            )
+
+            return (
+                trajectory_line,
+                projectile_point,
+                epoch_text
+            )
+
+        #===== ADJUSTING LAYOUT =====
+        plt.tight_layout()
+
+        #===== CREATING ANIMATION =====
+        animation = FuncAnimation(
+            fig=fig,
+            func=update,
+            frames=len(history),
+            init_func=initialize,
+            interval=interval_ms,
+            blit=True,
+            repeat=False
+        )
+
+        # Keep animation referenced until the window closes.
+        plt.show()

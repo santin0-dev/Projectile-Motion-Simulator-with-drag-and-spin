@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+
+# Generated simulation data
+Data/epoch_log.csv
+Data/log.csv
+
+# Testing/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE files
+.vscode/
+.idea/
+
+# Windows files
+Thumbs.db
+Desktop.ini
