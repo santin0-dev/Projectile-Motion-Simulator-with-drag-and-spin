@@ -1,3 +1,5 @@
+Vector2 = tuple[float, float]
+
 class Environment:
     STANDARD_GRAVITY = 9.80665
 

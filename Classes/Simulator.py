@@ -1,14 +1,20 @@
-from Classes import projectile, State, Environment
+from .Projectile import Projectile
+from .Environment import Environment
+from .State import State
 import math
+
+from pathlib import Path
+import os
+import csv
 
 Vector2 = tuple[float, float]
 
-class Simulate():
+class Simulator():
 
 
   def __init__(
     self,
-    proj: projectile,
+    proj: Projectile,
     conditions: Environment,
     initial_state: State,
     dt: float = 0.01
@@ -46,7 +52,7 @@ class Simulate():
     #===== CALCULATING DRAG FORCE =====
     drag_factor = (0.5
                    * self.conditions.air_density      # how crowded is the air
-                   * self.proj.drag_coef              # how aerodynamicis the projectile
+                   * self.proj.drag_coefficient              # how aerodynamicis the projectile
                    * self.proj.area                   # how much surface is hitting the air
                    * relative_speed                   # how quick is the air passing the proj
                    )
@@ -110,7 +116,7 @@ class Simulate():
     accel_y = acceleration[1]
     
 
-    
+
      #===== NEW VELOCITY =====
     new_vx = current_vx + accel_x * self.dt
     new_vy = current_vy + accel_y * self.dt
@@ -133,12 +139,210 @@ class Simulate():
     return new_state
 
 
-  def run():
+  def run(self) -> list[State]:
+    """
+    Initial state
+    ↓
+    calculate net force
+    ↓
+    calculate acceleration
+    ↓
+    advance one epoch
+    ↓
+    store new state
+    ↓
+    repeat until landing
+    """
 
-  def calculate_summary():
+    #===== INITIALIZING SIMULATION =====
+    current_state = self.initial_state
+    history = [current_state]
+
+    ground_y = 0.0
+
+    #===== SIMULATION LOOP =====
+    while True:
+
+        # Calculate the net force at the current epoch
+        net_force = self.calculate_forces(current_state)
+
+        # Convert net force into acceleration
+        acceleration = self.calculate_acceleration(net_force)
+
+        # Move the simulation forward by dt
+        new_state = self.advance_epoch(
+            current_state,
+            acceleration
+        )
+
+        # Store this epoch
+        history.append(new_state)
+
+        # Make the new state the current state
+        current_state = new_state
+
+        #===== LANDING CHECK =====
+        has_reached_ground = (
+            current_state.position[1] <= ground_y
+            and current_state.velocity[1] < 0
+        )
+
+        if has_reached_ground:
+            break
+
+    return history
 
 
+  def calculate_summary(self, history: list[State]) -> dict[str, float]:
+    """
+    Complete epoch history
+      ↓
+    find highest state
+      ↓
+    inspect final state
+      ↓
+    calculate final simulation results
+    """
+
+    if not history:
+      raise ValueError("Cannot calculate summary from an empty history")
+
+    initial_state = history[0]
+    final_state = history[-1]
 
 
+    heighest_state = max(
+        history,
+        key = lambda state: state.position[1]
+      )
+
+    maximum_height = heighest_state.position[1]
+    height_gained = maximum_height - initial_state.position[1]
+    time_at_max_height = heighest_state.time
+
+    flight_time = final_state.time - initial_state.time
+
+    horizontal_range = (
+      final_state.position[0]  -  initial_state.position[0]
+    )
+
+    impact_vx = final_state.velocity[0]
+    impact_vy = final_state.velocity[1]
+
+    impact_speed = math.hypot(impact_vx, impact_vy)
+
+    maximum_speed = max(
+      math.hypot(
+        state.velocity[0],
+        state.velocity[1]
+      )
+      for state in history
+    )
+
+
+    return {
+        "flight_time_s": flight_time,
+        "maximum_height_m": maximum_height,
+        "height_gained_m": height_gained,
+        "time_at_max_height_s": time_at_max_height,
+        "horizontal_range_m": horizontal_range,
+        "impact_velocity_x_mps": impact_vx,
+        "impact_velocity_y_mps": impact_vy,
+        "impact_speed_mps": impact_speed,
+        "maximum_speed_mps": maximum_speed
+    }
+
+
+  def store_summary(self, history_log: dict) -> None:
+    file_path = Path(__file__).parent/"log.csv"
+
+    header = ["flight_time_s",
+        "maximum_height_m",
+        "height_gained_m",
+        "time_at_max_height_s",
+        "horizontal_range_m",
+        "impact_velocity_x_mps",
+        "impact_velocity_y_mps",
+        "impact_speed_mps",
+        "maximum_speed_mps"]
+
+
+    log = [
+        history_log["flight_time_s"],
+        history_log["maximum_height_m"],
+        history_log["height_gained_m"],
+        history_log["time_at_max_height_s"],
+        history_log["horizontal_range_m"],
+        history_log["impact_velocity_x_mps"],
+        history_log["impact_velocity_y_mps"],
+        history_log["impact_speed_mps"],
+        history_log["maximum_speed_mps"]
+
+    ]
+
+    if os.path.exists(file_path):
+      with open (file_path, "a") as file:
+        writer = csv.writer(file)
+        writer.writerow(log)
+    else:
+      with open(file_path, "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(header)
+        writer.writerow(log)
+
+  def store_epoch_history(self, history: list[State]) -> None:
+    """
+    Complete state history
+    ↓
+    convert each State into one CSV row
+    ↓
+    store every simulation epoch
+    """
+
+    file_path = Path(__file__).parent / "epoch_log.csv"
+
+    header = [
+        "epoch",
+        "time_s",
+        "position_x_m",
+        "position_y_m",
+        "velocity_x_mps",
+        "velocity_y_mps",
+        "speed_mps",
+        "acceleration_x_mps2",
+        "acceleration_y_mps2"
+    ]
+
+    # "w" creates a fresh epoch log for each simulation.
+    with file_path.open(
+        mode="w",
+        newline="",
+        encoding="utf-8"
+    ) as file:
+
+        writer = csv.writer(file)
+        writer.writerow(header)
+
+        #===== WRITING EVERY EPOCH =====
+        for epoch, state in enumerate(history):
+
+            speed = math.hypot(
+                state.velocity[0],
+                state.velocity[1]
+            )
+
+            row = [
+                epoch,
+                state.time,
+                state.position[0],
+                state.position[1],
+                state.velocity[0],
+                state.velocity[1],
+                speed,
+                state.acceleration[0],
+                state.acceleration[1]
+            ]
+
+            writer.writerow(row)
 
   
